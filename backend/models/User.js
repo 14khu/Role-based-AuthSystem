@@ -33,19 +33,20 @@ const userSchema = new mongoose.Schema({
 });
 
 // Pre-save hook to hash password before saving
-userSchema.pre('save', async function(next) {
+userSchema.pre('save', async function() {
   // Only hash the password if it has been modified (or is new)
   if (!this.isModified('password')) {
-    return next();
+    return;
   }
 
   try {
     // Hash password with cost of 10
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
-    next();
   } catch (error) {
-    next(error);
+    // Re-throw so Mongoose rejects save() instead of saving silently.
+    // Mongoose's document pre-hooks are promise-based (no next callback).
+    throw error;
   }
 });
 
