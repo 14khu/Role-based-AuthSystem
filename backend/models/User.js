@@ -44,6 +44,9 @@ userSchema.pre('save', async function() {
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
   } catch (error) {
+    // Re-throw so Mongoose rejects save() instead of saving silently.
+    // Mongoose's document pre-hooks are promise-based (no next callback).
+    throw error;
   }
 });
 
